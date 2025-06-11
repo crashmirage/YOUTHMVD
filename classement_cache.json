@@ -1,0 +1,452 @@
+[
+  {
+    "epreuve": "1500m",
+    "prestation": "3:47,76",
+    "athlete": "Ilyes Druez",
+    "club": "MOHA",
+    "annee_naissance": "2008",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 1005
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:51,51",
+    "athlete": "Lennert Van Dyck",
+    "club": "AV Lyra-Lierse",
+    "annee_naissance": "2008",
+    "date": "01/05/2025",
+    "lieu": "Herentals",
+    "points": 983
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:52,39",
+    "athlete": "Julian Van Aken",
+    "club": "Daring Club Leuven Atletiek",
+    "annee_naissance": "2008",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 959
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:52,94",
+    "athlete": "Barnabé Chiliade",
+    "club": "ARCH",
+    "annee_naissance": "2009",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 944
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:53,57",
+    "athlete": "Renu De Samblancx",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2008",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 927
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:54,87",
+    "athlete": "Augustin de Harlez",
+    "club": "CS Dyle",
+    "annee_naissance": "2008",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 916
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:54,62",
+    "athlete": "Kilani Njema",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2008",
+    "date": "09/06/2025",
+    "lieu": "Duffel",
+    "points": 898
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:54,67",
+    "athlete": "Wout Schepens",
+    "club": "ACHL",
+    "annee_naissance": "2009",
+    "date": "01/05/2025",
+    "lieu": "Herentals",
+    "points": 897
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:55,10",
+    "athlete": "Mateo Longo Murit",
+    "club": "R.Excelsior SC",
+    "annee_naissance": "2009",
+    "date": "01/06/2025",
+    "lieu": "Braine L'alleud",
+    "points": 886
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:55,26",
+    "athlete": "Noah Simon",
+    "club": "Sambre et Meuse AC",
+    "annee_naissance": "2008",
+    "date": "19/04/2025",
+    "lieu": "Marche-En Famenne",
+    "points": 881
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:57,82",
+    "athlete": "Axl Hermans",
+    "club": "ACHL",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 880
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:58,08",
+    "athlete": "Roel Damman",
+    "club": "HCO Oostende",
+    "annee_naissance": "2009",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 877
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:58,71",
+    "athlete": "Nand Put",
+    "club": "Looise AV",
+    "annee_naissance": "2008",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 870
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:59,62",
+    "athlete": "Louis Van Daele",
+    "club": "AS Rieme",
+    "annee_naissance": "2008",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 859
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "3:59,90",
+    "athlete": "Tomas Merlevede",
+    "club": "KAAG Atletiek",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 856
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:56,32",
+    "athlete": "Lucas Barthel",
+    "club": "ARCH",
+    "annee_naissance": "2008",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 854
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:56,34",
+    "athlete": "Thomas Debaere",
+    "club": "AV Toekomst",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 853
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:56,87",
+    "athlete": "Noé Grommerch",
+    "club": "Royal Cercle Athletique de Spa",
+    "annee_naissance": "2008",
+    "date": "19/04/2025",
+    "lieu": "Marche-En Famenne",
+    "points": 839
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:01,35",
+    "athlete": "Merijn Huygens",
+    "club": "AC Hamme",
+    "annee_naissance": "2008",
+    "date": "18/05/2025",
+    "lieu": "Hamme",
+    "points": 839
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:57,51",
+    "athlete": "Oscar Delmée",
+    "club": "JSMC",
+    "annee_naissance": "2009",
+    "date": "24/05/2025",
+    "lieu": "Nivelles",
+    "points": 823
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:02,87",
+    "athlete": "Matthias Meert",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 821
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:57,81",
+    "athlete": "Henriques De Granada Nathanaël",
+    "club": "Royal White Star AC",
+    "annee_naissance": "2008",
+    "date": "01/05/2025",
+    "lieu": "Oordegem",
+    "points": 815
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:03,46",
+    "athlete": "Senne Van Riel",
+    "club": "Atletiek Volharding",
+    "annee_naissance": "2008",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 814
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:04,44",
+    "athlete": "Antoine Greffe",
+    "club": "Herve AC",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 803
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "1:58,74",
+    "athlete": "Jorden Rooms",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2009",
+    "date": "01/05/2025",
+    "lieu": "Herentals",
+    "points": 792
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:05,67",
+    "athlete": "Malo Robert",
+    "club": "HUY AC",
+    "annee_naissance": "2009",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 789
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:07,36",
+    "athlete": "Imran Kabbour",
+    "club": "Flanders AC",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 770
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:00,06",
+    "athlete": "Arnaud Vermoesen",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2009",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 759
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:00,12",
+    "athlete": "Alexis Vast",
+    "club": "AC Dampicourt",
+    "annee_naissance": "2009",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 758
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:08,48",
+    "athlete": "Damien Pechon",
+    "club": "AC Dampicourt",
+    "annee_naissance": "2008",
+    "date": "24/05/2025",
+    "lieu": "Gaurain-Ramecroix",
+    "points": 757
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:00,28",
+    "athlete": "Niels Hommey",
+    "club": "Flanders AC",
+    "annee_naissance": "2008",
+    "date": "29/05/2025",
+    "lieu": "Heusden-Zolder",
+    "points": 754
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:09,12",
+    "athlete": "Stef Janssens",
+    "club": "AC Duffel",
+    "annee_naissance": "2009",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 750
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:00,57",
+    "athlete": "Miel Haerens",
+    "club": "KRC Gent",
+    "annee_naissance": "2009",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 747
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:00,63",
+    "athlete": "Wietse Duthoo",
+    "club": "Kortrijk Sport Atletiek",
+    "annee_naissance": "2008",
+    "date": "18/05/2025",
+    "lieu": "Hamme",
+    "points": 745
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:09,72",
+    "athlete": "Lander Vanhauwere",
+    "club": "AC Duffel",
+    "annee_naissance": "2009",
+    "date": "09/06/2025",
+    "lieu": "Duffel",
+    "points": 744
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:01,06",
+    "athlete": "Baptiste Beaupain",
+    "club": "OCAN",
+    "annee_naissance": "2009",
+    "date": "17/05/2025",
+    "lieu": "Seraing",
+    "points": 735
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:01,15",
+    "athlete": "Joan Denolin",
+    "club": "FC Hannut",
+    "annee_naissance": "2009",
+    "date": "01/06/2025",
+    "lieu": "Braine L'alleud",
+    "points": 733
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:01,17",
+    "athlete": "Kamiel Vermael",
+    "club": "STAX",
+    "annee_naissance": "2009",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 732
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:01,36",
+    "athlete": "Tiago Dekie",
+    "club": "AV Molenland",
+    "annee_naissance": "2008",
+    "date": "04/05/2025",
+    "lieu": "Kortrijk",
+    "points": 728
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:11,51",
+    "athlete": "Guillaume Bruwier",
+    "club": "Herve AC",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 724
+  },
+  {
+    "epreuve": "800m",
+    "prestation": "2:01,60",
+    "athlete": "Thomas Vandewaetere",
+    "club": "Regio Oost-Brabant Atletiek",
+    "annee_naissance": "2009",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 722
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:13,88",
+    "athlete": "Gaspard Polet",
+    "club": "CS Dyle",
+    "annee_naissance": "2008",
+    "date": "07/06/2025",
+    "lieu": "Oordegem",
+    "points": 699
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:14,47",
+    "athlete": "Victor Delmoitiez",
+    "club": "Herve AC",
+    "annee_naissance": "2008",
+    "date": "31/05/2025",
+    "lieu": "Lier",
+    "points": 692
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:14,81",
+    "athlete": "Wissam Goumane",
+    "club": "RCABW",
+    "annee_naissance": "2009",
+    "date": "26/04/2025",
+    "lieu": "Perwez",
+    "points": 689
+  },
+  {
+    "epreuve": "1500m",
+    "prestation": "4:15,11",
+    "athlete": "Lander Groebbens",
+    "club": "AC Eendracht Aalst",
+    "annee_naissance": "2009",
+    "date": "11/05/2025",
+    "lieu": "Lokeren",
+    "points": 685
+  }
+]
