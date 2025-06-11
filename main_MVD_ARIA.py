@@ -89,7 +89,10 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
 
 def scrape_epreuve(epreuve: str):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # mode headless obligatoire
+    options.add_argument("--no-sandbox")  # pour éviter certains problèmes de permission
+    options.add_argument("--disable-dev-shm-usage")  # améliore la stabilité sur certains systèmes
+    options.add_argument("--disable-gpu")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
