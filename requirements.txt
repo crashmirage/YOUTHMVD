@@ -2,4 +2,3 @@ fastapi
 uvicorn[standard]
 selenium
 webdriver-manager
-sqlite3
