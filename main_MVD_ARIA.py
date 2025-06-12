@@ -113,8 +113,8 @@ def scrape_epreuve(epreuve: str):
         service=Service(ChromeDriverManager().install()),    
         options=options,
         browser_executable_path=chrome_path,
-        patcher_executable_path=chrome,
-        use_subprocess=True)
+        patcher_executable_path=chrome,
+        use_subprocess=True)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
