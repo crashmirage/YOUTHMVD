@@ -1,9 +1,10 @@
 FROM python:3.11-slim
 
+# Installer les dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
     wget \
-    gnupg2 \
     curl \
+    gnupg2 \
     unzip \
     ca-certificates \
     fonts-liberation \
@@ -23,33 +24,26 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     libu2f-udev \
     libvulkan1 \
+    libgtk-3-0 \
     --no-install-recommends && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y wget gnupg2 curl unzip \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg \
-    && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update && apt-get install -y google-chrome-stable \
-    && google-chrome --version
-
-
-RUN echo "[INFO] Ajout de la clé GPG Chrome" && \
-    mkdir -p /etc/apt/keyrings && \
+# Installer Google Chrome manuellement (clé GPG correcte + dépôt)
+RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
     echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable && \
-    echo "[INFO] Chrome installé" && \
-    which google-chrome && \
-    google-chrome --version || echo "[ERREUR] Chrome non trouvé"
+    apt-get update && apt-get install -y google-chrome-stable && \
+    rm -rf /var/lib/apt/lists/*
 
-# Installer dépendances Python
+# Débogage (optionnel mais utile en dev)
+RUN which google-chrome && google-chrome --version
+
+# Installer les dépendances Python
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code
+# Copier le code source
 COPY . .
 
 EXPOSE 8000
