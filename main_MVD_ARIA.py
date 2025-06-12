@@ -120,11 +120,8 @@ def scrape_epreuve(epreuve: str):
     print(f"[DEBUG] Chrome binary set to: {options.binary_location}")
 
     check_chrome()
-    
-    driver = uc.Chrome(
-        options=options,
-        driver_executable_path=ChromeDriverManager().install()
-    )
+
+    driver = uc.Chrome(options=options)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
