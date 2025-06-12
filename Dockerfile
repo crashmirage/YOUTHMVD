@@ -1,10 +1,10 @@
 FROM python:3.11-slim
 
-# Installer les dépendances système nécessaires
+# Dépendances système pour Chrome et ChromeDriver
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
-    gnupg2 \
+    gnupg \
     unzip \
     ca-certificates \
     fonts-liberation \
@@ -21,29 +21,29 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    xdg-utils \
     libu2f-udev \
     libvulkan1 \
+    xdg-utils \
     libgtk-3-0 \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
 
-# Installer Google Chrome manuellement (clé GPG correcte + dépôt)
+# Ajouter la clé GPG de Chrome + dépôt officiel
 RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
-    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
+    gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
+    > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && apt-get install -y google-chrome-stable && \
     rm -rf /var/lib/apt/lists/*
 
-# Débogage (optionnel mais utile en dev)
-RUN which google-chrome && google-chrome --version
+# Vérification (debug)
+RUN echo "[DEBUG] Chrome version :" && which google-chrome && google-chrome --version || echo "[ERREUR] Chrome non trouvé"
 
-# Installer les dépendances Python
+# Python
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code source
 COPY . .
 
 EXPOSE 8000
