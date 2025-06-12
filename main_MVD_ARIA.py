@@ -15,6 +15,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+import undetected_chromedriver as uc
 import sqlite3
 import re
 import time
@@ -88,28 +89,42 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
     return None
 
 def scrape_epreuve(epreuve: str):
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")  # mode headless obligatoire
-    options.add_argument("--no-sandbox")  # pour éviter certains problèmes de permission
-    options.add_argument("--disable-dev-shm-usage")  # améliore la stabilité sur certains systèmes
-    options.add_argument("--disable-gpu")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    print(f"Démarrage Scrap pour {epreuve}")
+    options = uc.ChromeOptions()
+    options.add_argument('--headless=new')
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')  # important sur environnements limités
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+    driver = uc.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
+    print("Page Chargé")
     wait = WebDriverWait(driver, 60)
 
     try:
         lang_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")))
         lang_button.click()
         print("Language ok")
-    except:
+    except Exception as e:
+        print(f"Problème Langue {e}")
         pass
 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(3)
 
-    table = wait.until(EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1")))
+    try:
+        table = wait.until(EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1")))
+        print("[INFO] Table de classement détectée")
+    except Exception as e:
+        print("[ERROR] Table non trouvée (headless) :", str(e))
+        driver.save_screenshot(f"headless_error_{epreuve}.png")  # Voir ce que Selenium voit
+        raise
+
+    #table = wait.until(EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1")))
     rows = table.find_elements(By.TAG_NAME, "tr")
     data = []
 
@@ -175,5 +190,4 @@ def get_classement_commun(update: bool = Query(False)):
         return JSONResponse(content=classement_unique)
 
     except Exception as e:
-        print("Erreur",e)
         return JSONResponse(content={"error": str(e)}, status_code=500)
