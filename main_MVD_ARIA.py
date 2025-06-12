@@ -190,4 +190,6 @@ def get_classement_commun(update: bool = Query(False)):
         return JSONResponse(content=classement_unique)
 
     except Exception as e:
+        tb = traceback.format_exc()
+        print(tb) 
         return JSONResponse(content={"error": str(e)}, status_code=500)
