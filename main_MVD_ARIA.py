@@ -99,15 +99,21 @@ def scrape_epreuve(epreuve: str):
     options.add_argument('--headless=new')
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')  # important sur environnements limités
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
     
     chrome_path = shutil.which("google-chrome") or "/usr/bin/google-chrome"
     options.binary_location = chrome_path
-    driver = uc.Chrome(service=Service(ChromeDriverManager().install()), options=options,
-    browser_executable_path=chrome_path)
+    
+    print(f"[DEBUG] Chemin Chrome détecté : {chrome_path}")
+    
+    driver = uc.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=options,
+        browser_executable_path=chrome_path 
+    )
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
