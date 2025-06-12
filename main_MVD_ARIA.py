@@ -104,17 +104,13 @@ def scrape_epreuve(epreuve: str):
     options.add_argument('--window-size=1920,1080')
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
     
-    chrome_path = shutil.which("google-chrome") or "/usr/bin/google-chrome"
-    options.binary_location = chrome_path
-    
-    print(f"[DEBUG] Chemin Chrome détecté : {chrome_path}")
+    options.binary_location = "/usr/bin/google-chrome"
+    print(f"[DEBUG] Chrome binary set to: {options.binary_location}")
     
     driver = uc.Chrome(
-        service=Service(ChromeDriverManager().install()),    
         options=options,
-        browser_executable_path=chrome_path,
-        driver_executable_path=ChromeDriverManager().install(),
-        use_subprocess=True)
+        driver_executable_path=ChromeDriverManager().install()
+    )
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
