@@ -110,9 +110,11 @@ def scrape_epreuve(epreuve: str):
     print(f"[DEBUG] Chemin Chrome détecté : {chrome_path}")
     
     driver = uc.Chrome(
-        service=Service(ChromeDriverManager().install()),
+        service=Service(ChromeDriverManager().install()),    
         options=options,
-        browser_executable_path=chrome_path 
+        browser_executable_path=chrome_path,  # ← C’est ce champ qui est crucial
+        use_subprocess=True  
+
     )
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
