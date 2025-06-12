@@ -21,6 +21,8 @@ import re
 import time
 import json
 import os
+import traceback
+
 
 app = FastAPI()
 
@@ -98,6 +100,7 @@ def scrape_epreuve(epreuve: str):
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+    options.binary_location = "/usr/bin/google-chrome"
     driver = uc.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
