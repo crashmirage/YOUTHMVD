@@ -22,6 +22,8 @@ import time
 import json
 import os
 import traceback
+import shutil
+
 
 
 app = FastAPI()
@@ -92,6 +94,7 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
 
 def scrape_epreuve(epreuve: str):
     print(f"Démarrage Scrap pour {epreuve}")
+
     options = uc.ChromeOptions()
     options.add_argument('--headless=new')
     options.add_argument('--disable-blink-features=AutomationControlled')
@@ -100,8 +103,9 @@ def scrape_epreuve(epreuve: str):
     options.add_argument('--disable-gpu')
     options.add_argument('--window-size=1920,1080')
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
-    options.binary_location = "/usr/bin/google-chrome"
-    chrome_path = "/usr/bin/google-chrome"
+    
+    chrome_path = shutil.which("google-chrome") or "/usr/bin/google-chrome"
+    options.binary_location = chrome_path
     driver = uc.Chrome(service=Service(ChromeDriverManager().install()), options=options,
     browser_executable_path=chrome_path)
 
