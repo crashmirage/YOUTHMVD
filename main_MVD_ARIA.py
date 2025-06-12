@@ -23,7 +23,7 @@ import json
 import os
 import traceback
 import shutil
-
+import subprocess
 
 
 app = FastAPI()
@@ -61,6 +61,18 @@ def parse_performance(perf_str):
         return float(perf_str)
     except ValueError:
         return None
+
+def check_chrome():
+    result = subprocess.run(["which", "google-chrome"], capture_output=True, text=True)
+    print(f"[DEBUG] Résultat which google-chrome : {result.stdout.strip()}")
+
+    try:
+        version = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True)
+        print(f"[DEBUG] Version Google Chrome : {version.stdout.strip()}")
+    except Exception as e:
+        print(f"[DEBUG] Impossible de lire la version de Chrome : {e}")
+
+
 
 def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
     perf = parse_performance(perf_str)
@@ -106,6 +118,8 @@ def scrape_epreuve(epreuve: str):
     
     options.binary_location = "/usr/bin/google-chrome"
     print(f"[DEBUG] Chrome binary set to: {options.binary_location}")
+
+    check_chrome()
     
     driver = uc.Chrome(
         options=options,
