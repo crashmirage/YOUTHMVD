@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: youthmvd-api
+    env: docker
+    repo: https://github.com/crashmirage/YOUTHMVD
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8000
