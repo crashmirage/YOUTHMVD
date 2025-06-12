@@ -112,7 +112,7 @@ def scrape_epreuve(epreuve: str):
     driver = uc.Chrome(
         service=Service(ChromeDriverManager().install()),    
         options=options,
-        browser_executable_path=chrome_path,  # ← C’est ce champ qui est crucial
+        browser_executable_path=chrome_path,
         use_subprocess=True  
 
     )
