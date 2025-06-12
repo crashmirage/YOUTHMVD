@@ -102,7 +102,7 @@ def scrape_epreuve(epreuve: str):
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
     options.binary_location = "/usr/bin/google-chrome"
     chrome_path = "/usr/bin/google-chrome"
-    driver = uc.Chrome(service=Service(ChromeDriverManager(version="114.0.5735.90").install()), options=options,
+    driver = uc.Chrome(service=Service(ChromeDriverManager().install(driver_version="114.0.5735.90")), options=options,
     browser_executable_path=chrome_path)
 
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
