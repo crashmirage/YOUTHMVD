@@ -39,49 +39,6 @@ app.add_middleware(
 
 CACHE_FILE = "classement_cache.json"
 
-def get_events(filtered_type, gender, cat):
-    table_name = f"performances_{'men' if gender == 'men' else 'women'}"
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute(f"PRAGMA table_info({table_name})")
-    columns = cursor.fetchall()
-    perf_columns = [col[1] for col in columns if col[1].lower() != "points"]
-
-    cursor.execute("""
-        SELECT nom_db, nom_display
-        FROM MAP
-        WHERE lieu = ? AND cat=?
-        ORDER BY priorite
-    """, (filtered_type,cat))
-    mapping_entries = cursor.fetchall()
-    conn.close()
-
-    return [(nom_db, nom_display) for nom_db, nom_display in mapping_entries if nom_db in perf_columns]
-
-
-def parse_performance(perf_str):
-    # Remplace virgules par points et apostrophes/quotes par des séparateurs classiques
-    perf_str = perf_str.replace(',', '.').replace("'", ':').replace('"', '.')
-
-    # Si le format est juste un float (ex: 13.14)
-    if re.match(r'^\d+(\.\d+)?$', perf_str.strip()):
-        return float(perf_str.strip())
-
-    # Si format type minutes:secondes(.centièmes)
-    match = re.match(r'(?:(\d+):)?(\d+)(?:[.:](\d+))?', perf_str.strip())
-    if match:
-        minutes = int(match.group(1)) if match.group(1) else 0
-        seconds = int(match.group(2))
-        centièmes = int(match.group(3)) if match.group(3) else 0
-
-        # Centièmes peuvent être 2 chiffres ou 1
-        if centièmes < 10 and len(match.group(3) or '') == 1:
-            centièmes *= 10
-
-        return minutes * 60 + seconds + centièmes / 100.0
-    raise ValueError("Format de performance non reconnu")
-
 def save_json(data, path=CACHE_FILE):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -114,7 +71,6 @@ def check_chrome():
         print(f"[DEBUG] Version Google Chrome : {version.stdout.strip()}")
     except Exception as e:
         print(f"[DEBUG] Impossible de lire la version de Chrome : {e}")
-
 
 
 def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
@@ -260,42 +216,57 @@ def get_classement_commun(update: bool = Query(False)):
         print(tb) 
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-@app.route('/FromPoints', methods=['GET', 'POST'])
-def from_points():
-    selected_gender = request.values.get('gender', 'men')
-    selected_type = request.values.get('event_type', 'Outdoor')
-    selected_event = request.values.get('event')
-    selected_points = request.values.get('points')
-    selected_cat = request.values.get('event_cat', 'Middle Distance')
-    table_name = f"performances_{'men' if selected_gender == 'men' else 'women'}"
+class PointsInput(BaseModel):
+    gender: str
+    event_type: str
+    event_cat: str
+    event: str
+    points: int
 
-    events = get_events(selected_type, selected_gender, selected_cat)
-    performance = None
-    display_name = ""
+@app.post("/FromPoints")
+def from_points(data: PointsInput):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
-    if request.method == 'POST' and selected_event and selected_points:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+    # On va chercher les coefficients A, B, C dans la table 'score'
+    cursor.execute("""
+        SELECT A, B, C, unit FROM score
+        WHERE event = ?
+    """, (data.event,))
+    row = cursor.fetchone()
+    conn.close()
 
-        # Récupère le nom affiché
-        cursor.execute("SELECT nom_display FROM MAP WHERE nom_db = ?", (selected_event,))
-        row = cursor.fetchone()
-        display_name = row[0] if row else selected_event
+    if not row:
+        return {"performance": "Épreuve inconnue"}
 
-        # Recherche la performance
-        cursor.execute(f"SELECT `{selected_event}` FROM {table_name} WHERE Points = ?", (selected_points,))
-        result = cursor.fetchone()
-        conn.close()
+    A, B, C, unit = row
 
-        performance = result[0] if result else "No data, points are between 1 and 1400"
+    # Calcul basé sur la formule de World Athletics
+    perf = (data.points / A) ** (1 / C) - B
 
-    return render_template_string(HTML,
-                                  events=events,
-                                  performance=performance,
-                                  selected_event=selected_event,
-                                  selected_points=selected_points,
-                                  selected_gender=selected_gender,
-                                  selected_type=selected_type,
-                                  selected_cat=selected_cat,
-                                  display_name=display_name)
+    # Conversion pour affichage (ex. secondes en mm:ss si besoin)
+    if unit == "min":
+        minutes = int(perf)
+        seconds = (perf - minutes) * 60
+        formatted = f"{minutes}:{seconds:.2f}"
+    elif unit == "sec":
+        formatted = f"{perf:.2f} sec"
+    elif unit == "cm":
+        formatted = f"{perf:.2f} m"
+    else:
+        formatted = f"{perf:.2f}"
 
+    return {"performance": formatted}
+
+@app.get("/get_events")
+def get_events(gender: str, event_type: str, event_cat: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT db_event, display_event FROM map
+        WHERE gender = ? AND type = ? AND cat = ?
+        ORDER BY display_event
+    """, (gender, event_type, event_cat))
+    events = cursor.fetchall()
+    conn.close()
+    return events
