@@ -29,6 +29,7 @@ import subprocess
 
 app = FastAPI()
 
+DB_PATH="combined.db"
 
 app.add_middleware(
     CORSMiddleware,
