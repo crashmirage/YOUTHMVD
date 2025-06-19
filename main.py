@@ -221,26 +221,56 @@ def get_classement_commun(update: bool = Query(False)):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.post("/FromPoints")
-def from_points(gender: str, event:str, points:int):
+def from_points(gender: str, event: str, points: int):
+    # Choix de la table selon le genre
+    if gender not in ("men", "women"):
+        return {"error": "Invalid gender, must be 'men' or 'women'"}
+
+    table_name = f"performances_{gender}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    table_name = f"performances_{'men' if gender == 'men' else 'women'}"
-    cursor.execute(f"SELECT `{event}` FROM {table_name} WHERE Points = ?", (points,))
-    result = cursor.fetchone()
-    conn.close()
-    performance = result[0] if result else "No data, points are between 1 and 1400"
+
+    try:
+        # Vérifie que l'épreuve existe comme colonne dans la table
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        columns = [col[1] for col in cursor.fetchall()]
+        if event not in columns:
+            return {"error": f"Event '{event}' not found in table {table_name}"}
+
+        # Requête sécurisée
+        cursor.execute(f"SELECT `{event}` FROM {table_name} WHERE Points = ?", (points,))
+        result = cursor.fetchone()
+
+        performance = result[0] if result else "No data, points are between 1 and 1400"
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        conn.close()
 
     return {"performance": performance}
 
 @app.get("/get_events")
-def get_events(event_type: str, event_cat: str):
+def get_events(event_type: str, event_cat: str, gender: str):
+    table_name = f"performances_{'men' if gender == 'men' else 'women'}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = cursor.fetchall()
+    perf_columns = [col[1] for col in columns if col[1].lower() != "points"]
+
     cursor.execute("""
-        SELECT nom_db, nom_display FROM map
+        SELECT nom_db, nom_display
+        FROM map
         WHERE lieu = ? AND cat = ?
         ORDER BY priorite
     """, (event_type, event_cat))
-    events = cursor.fetchall()
+    mapping_entries = cursor.fetchall()
     conn.close()
-    return events
+
+    return [
+        (nom_db, nom_display)
+        for nom_db, nom_display in mapping_entries
+        if nom_db in perf_columns
+    ]
+
