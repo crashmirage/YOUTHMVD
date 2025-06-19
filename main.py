@@ -245,10 +245,9 @@ def get_events(event_type: str, event_cat: str, gender: str):
         for nom_db, nom_display in mapping_entries
         if nom_db in perf_columns
     ]
-from fastapi import Request
 
 @app.post("/FromPoints")
-async def from_points(request: Request):
+def from_points(request: Request):
     data = await request.json()
     gender = data.get("gender")
     event = data.get("event")
