@@ -232,12 +232,10 @@ def get_events(event_type: str, event_cat: str, gender: str):
     perf_columns = [col[1] for col in columns if col[1].lower() != "points"]
 
     cursor.execute("""
-        SELECT nom_db, nom_display
-        FROM MAP
+        SELECT nom_db, nom_display FROM MAP
         WHERE lieu = ? AND cat = ?
         ORDER BY priorite
     """, (event_type, event_cat))
-    events = cursor.fetchall()
     mapping_entries = cursor.fetchall()
     conn.close()
 
