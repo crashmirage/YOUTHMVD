@@ -233,10 +233,11 @@ def get_events(event_type: str, event_cat: str, gender: str):
 
     cursor.execute("""
         SELECT nom_db, nom_display
-        FROM map
+        FROM MAP
         WHERE lieu = ? AND cat = ?
         ORDER BY priorite
     """, (event_type, event_cat))
+    events = cursor.fetchall()
     mapping_entries = cursor.fetchall()
     conn.close()
 
@@ -248,33 +249,13 @@ def get_events(event_type: str, event_cat: str, gender: str):
 
 
 @app.post("/FromPoints")
-async def from_points(request: Request):
-    data = await request.json()
-    gender = data.get("gender")
-    event = data.get("event")
-    points = data.get("points")
-
+def from_points(gender: str, event: str, points: int):
     if gender not in ("men", "women"):
         return {"error": "Invalid gender, must be 'men' or 'women'"}
-
     table_name = f"performances_{gender}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
-    try:
-        cursor.execute(f"PRAGMA table_info({table_name})")
-        columns = [col[1] for col in cursor.fetchall()]
-        if event not in columns:
-            return {"error": f"Event '{event}' not found in table {table_name}"}
-
-        cursor.execute(f"SELECT `{event}` FROM {table_name} WHERE Points = ?", (points,))
-        result = cursor.fetchone()
-
-        performance = result[0] if result else "No data, points are between 1 and 1400"
-    except Exception as e:
-        return {"error": str(e)}
-    finally:
-        conn.close()
-
+    performance = 0
+    
     return {"performance": performance}
 
