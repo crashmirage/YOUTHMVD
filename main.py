@@ -222,11 +222,7 @@ def get_classement_commun(update: bool = Query(False)):
 
 
 @app.get("/get_events")
-def get_events(
-    event_type: str = Query(...),
-    event_cat: str = Query(...),
-    gender: str = Query(...)
-):
+def get_events(event_type: str, event_cat: str, gender: str):
     table_name = f"performances_{'men' if gender == 'men' else 'women'}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -249,8 +245,6 @@ def get_events(
         for nom_db, nom_display in mapping_entries
         if nom_db in perf_columns
     ]
-
-
 from fastapi import Request
 
 @app.post("/FromPoints")
