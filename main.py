@@ -241,13 +241,14 @@ def get_events(event_type: str, event_cat: str, gender: str):
     conn.close()
 
     return [
-        (nom_db, nom_display)
+        {"nom_db": nom_db, "nom_display": nom_display}
         for nom_db, nom_display in mapping_entries
         if nom_db in perf_columns
     ]
 
+
 @app.post("/FromPoints")
-def from_points(request: Request):
+async def from_points(request: Request):
     data = await request.json()
     gender = data.get("gender")
     event = data.get("event")
@@ -276,3 +277,4 @@ def from_points(request: Request):
         conn.close()
 
     return {"performance": performance}
+
