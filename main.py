@@ -105,6 +105,8 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
         return valid_rows[-1][1]
     return None
 
+
+
 def scrape_epreuve(epreuve: str):
     print(f"Démarrage Scrap pour {epreuve}")
 
@@ -218,57 +220,27 @@ def get_classement_commun(update: bool = Query(False)):
         print(tb) 
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-class PointsInput(BaseModel):
-    gender: str
-    event_type: str
-    event_cat: str
-    event: str
-    points: int
-
 @app.post("/FromPoints")
-def from_points(data: PointsInput):
+def from_points(gender: str, event:str, points:int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
-    # On va chercher les coefficients A, B, C dans la table 'score'
-    cursor.execute("""
-        SELECT A, B, C, unit FROM score
-        WHERE event = ?
-    """, (data.event,))
-    row = cursor.fetchone()
+    table_name = f"performances_{'men' if gender == 'men' else 'women'}"
+    cursor.execute(f"SELECT `{event}` FROM {table_name} WHERE Points = ?", (points,))
+    result = cursor.fetchone()
     conn.close()
+    performance = result[0] if result else "No data, points are between 1 and 1400"
 
-    if not row:
-        return {"performance": "Épreuve inconnue"}
-
-    A, B, C, unit = row
-
-    # Calcul basé sur la formule de World Athletics
-    perf = (data.points / A) ** (1 / C) - B
-
-    # Conversion pour affichage (ex. secondes en mm:ss si besoin)
-    if unit == "min":
-        minutes = int(perf)
-        seconds = (perf - minutes) * 60
-        formatted = f"{minutes}:{seconds:.2f}"
-    elif unit == "sec":
-        formatted = f"{perf:.2f} sec"
-    elif unit == "cm":
-        formatted = f"{perf:.2f} m"
-    else:
-        formatted = f"{perf:.2f}"
-
-    return {"performance": formatted}
+    return {"performance": performance}
 
 @app.get("/get_events")
-def get_events(gender: str, event_type: str, event_cat: str):
+def get_events(event_type: str, event_cat: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT db_event, display_event FROM map
-        WHERE gender = ? AND type = ? AND cat = ?
-        ORDER BY display_event
-    """, (gender, event_type, event_cat))
+        SELECT nom_db, nom_display FROM map
+        WHERE type = ? AND cat = ?
+        ORDER BY priorite
+    """, (event_type, event_cat))
     events = cursor.fetchall()
     conn.close()
     return events
