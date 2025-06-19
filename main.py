@@ -238,7 +238,7 @@ def get_events(event_type: str, event_cat: str):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT nom_db, nom_display FROM map
-        WHERE type = ? AND cat = ?
+        WHERE lieu = ? AND cat = ?
         ORDER BY priorite
     """, (event_type, event_cat))
     events = cursor.fetchall()
