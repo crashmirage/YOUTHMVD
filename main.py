@@ -221,29 +221,34 @@ def get_classement_commun(update: bool = Query(False)):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.post("/FromPoints")
-def from_points(gender: str, event: str, points: int):
-    # Choix de la table selon le genre
+async def from_points(request: Request):
+    data = await request.json()
+    gender = data.get("gender")
+    event = data.get("event")
+    points = data.get("points")
+
     if gender not in ("men", "women"):
-        return {"error": "Invalid gender, must be 'men' or 'women'"}
+        return JSONResponse(content={"error": "Invalid gender, must be 'men' or 'women'"}, status_code=400)
+
+    if not isinstance(points, int):
+        return JSONResponse(content={"error": "Points must be an integer"}, status_code=400)
 
     table_name = f"performances_{gender}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     try:
-        # Vérifie que l'épreuve existe comme colonne dans la table
         cursor.execute(f"PRAGMA table_info({table_name})")
         columns = [col[1] for col in cursor.fetchall()]
         if event not in columns:
-            return {"error": f"Event '{event}' not found in table {table_name}"}
+            return JSONResponse(content={"error": f"Event '{event}' not found in table {table_name}"}, status_code=400)
 
-        # Requête sécurisée
         cursor.execute(f"SELECT `{event}` FROM {table_name} WHERE Points = ?", (points,))
         result = cursor.fetchone()
-
         performance = result[0] if result else "No data, points are between 1 and 1400"
+
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         conn.close()
 
