@@ -5,7 +5,7 @@ Created on Wed Jun 11 10:22:33 2025
 @author: Thomas
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi import Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
