@@ -183,6 +183,7 @@ def scrape_epreuve(epreuve: str):
     driver.quit()
     return data
 
+
 @app.get("/YouthMemorialDemiFond")
 def get_classement_commun(update: bool = Query(False)):
     try:
@@ -250,7 +251,7 @@ class FromPointsRequest(BaseModel):
     event: str
     points: int
 
-@app.get("\FromPoints")
+@app.post("/FromPoints")
 async def from_points(data: FromPointsRequest):
     gender = data.gender.lower()
     selected_event = data.event
