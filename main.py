@@ -268,21 +268,32 @@ async def from_points(data: FromPointsRequest):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Récupérer le nom affiché
         cursor.execute("SELECT nom_display FROM MAP WHERE nom_db = ?", (selected_event,))
         row = cursor.fetchone()
         display_name = row[0] if row else selected_event
-        cursor.execute(f"SELECT `{selected_event}` FROM {table_name} WHERE Points = ?", (selected_points,))
-        result = cursor.fetchone()
+
+        performance = None
+        current_points = selected_points
+
+        while current_points <= 1400:
+            cursor.execute(f"SELECT `{selected_event}` FROM {table_name} WHERE Points = ?", (current_points,))
+            result = cursor.fetchone()
+            if result and result[0]:  # si on a une performance non nulle
+                performance = result[0]
+                break
+            current_points += 1
+
         conn.close()
 
-        if result:
-            performance = result[0]
+        if performance:
             return {"performance": performance, "event_display_name": display_name}
         else:
-            return {"performance": "No data, points are between 1 and 1400", "event_display_name": display_name}
+            return {"performance": "No data, même en testant jusqu’à 1400", "event_display_name": display_name}
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
+
 
 class FromPerfRequest(BaseModel):
     gender: str
@@ -291,22 +302,23 @@ class FromPerfRequest(BaseModel):
 
 @app.post("/FromPerf")
 async def from_perf(data: FromPerfRequest):
-    gender = data.gender.lower()
-    selected_event = data.event
-    selected_perf = data.perf
+    try:
+        gender = data.gender.lower()
+        selected_event = data.event
+        selected_perf = data.perf
 
-    if gender not in ("men", "women"):
-        return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
-    if not selected_event or not selected_perf:
-        return JSONResponse(status_code=400, content={"error": "Event and points must be provided."})
+        if gender not in ("men", "women"):
+            return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
+        if not selected_event or not selected_perf:
+            return JSONResponse(status_code=400, content={"error": "Event and performance must be provided."})
 
-    table_name = f"performances_{gender}"
-    points = get_perf_points(table_name, selected_event, selected_perf)
+        table_name = f"performances_{gender}"
+        points = get_perf_points(table_name, selected_event, selected_perf)
 
-    if points:   
-        return {"points": points}
-     else:
-        return {"points": "No data, sûrement dû à une virgule ou à un truc du genre"}
+        if points is not None:
+            return {"points": points}
+        else:
+            return {"points": "No data, sûrement dû à une virgule ou à un format incorrect"}
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
