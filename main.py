@@ -283,3 +283,30 @@ async def from_points(data: FromPointsRequest):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
+
+class FromPerfRequest(BaseModel):
+    gender: str
+    event: str
+    perf: str
+
+@app.post("/FromPerf")
+async def from_perf(data: FromPerfRequest):
+    gender = data.gender.lower()
+    selected_event = data.event
+    selected_perf = data.perf
+
+    if gender not in ("men", "women"):
+        return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
+    if not selected_event or not selected_perf:
+        return JSONResponse(status_code=400, content={"error": "Event and points must be provided."})
+
+    table_name = f"performances_{gender}"
+    points = get_perf_points(table_name, selected_event, selected_perf)
+
+    if points:   
+        return {"points": points}
+     else:
+        return {"points": "No data, sûrement dû à une virgule ou à un truc du genre"}
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
