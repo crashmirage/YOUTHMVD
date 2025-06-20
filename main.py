@@ -245,3 +245,40 @@ def get_events(event_type: str, event_cat: str, gender: str):
         if nom_db in perf_columns
     ]
 
+class FromPointsRequest(BaseModel):
+    gender: str
+    event: str
+    points: int
+
+@app.get("\FromPoints")
+async def from_points(data: FromPointsRequest):
+    gender = data.gender.lower()
+    selected_event = data.event
+    selected_points = data.points
+
+    if gender not in ("men", "women"):
+        return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
+    if not selected_event or not selected_points:
+        return JSONResponse(status_code=400, content={"error": "Event and points must be provided."})
+
+    table_name = f"performances_{gender}"
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT nom_display FROM MAP WHERE nom_db = ?", (selected_event,))
+        row = cursor.fetchone()
+        display_name = row[0] if row else selected_event
+        cursor.execute(f"SELECT `{selected_event}` FROM {table_name} WHERE Points = ?", (selected_points,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            performance = result[0]
+            return {"performance": performance, "event_display_name": display_name}
+        else:
+            return {"performance": "No data, points are between 1 and 1400", "event_display_name": display_name}
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
