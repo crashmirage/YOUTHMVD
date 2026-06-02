@@ -115,66 +115,102 @@ def scrape_epreuve(epreuve: str):
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--user-agent=Mozilla/5.0")
+    # Anti-détection bot
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36")
     options.binary_location = "/usr/bin/google-chrome"
 
     service = Service("/usr/local/bin/chromedriver")
-
     driver = webdriver.Chrome(service=service, options=options)
 
+    # Masquer webdriver
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    })
+
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
-    driver.get(url)
-
-    wait = WebDriverWait(driver, 60)
-
+    
     try:
-        lang_button = wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")
+        driver.get(url)
+        wait = WebDriverWait(driver, 90)  # 90s au lieu de 60s
+
+        # Attendre que la page soit vraiment chargée
+        time.sleep(3)
+
+        # Fermer le modal langue si présent
+        try:
+            lang_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")
+                )
             )
-        )
-        lang_button.click()
-    except:
-        pass
+            lang_button.click()
+            print(f"[DEBUG] Modal langue fermé pour {epreuve}")
+            time.sleep(2)
+        except Exception as e:
+            print(f"[DEBUG] Pas de modal langue : {e}")
 
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(3)
+        # Scroll pour déclencher le lazy loading
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(3)
+        driver.execute_script("window.scrollTo(0, 0);")
+        time.sleep(1)
 
-    table = wait.until(
-        EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1"))
-    )
+        # Debug : voir ce qui est chargé
+        print(f"[DEBUG] URL actuelle : {driver.current_url}")
+        print(f"[DEBUG] Titre page : {driver.title}")
 
-    rows = table.find_elements(By.TAG_NAME, "tr")
+        # Chercher le tableau
+        try:
+            table = wait.until(
+                EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1"))
+            )
+            print(f"[DEBUG] Tableau trouvé pour {epreuve}")
+        except Exception as e:
+            print(f"[DEBUG] Tableau NON trouvé. Page source (500 premiers chars) :")
+            print(driver.page_source[:500])
+            driver.quit()
+            return []
 
-    data = []
+        rows = table.find_elements(By.TAG_NAME, "tr")
+        data = []
 
-    for row in rows[:30]:
-        cells = row.find_elements(By.TAG_NAME, "td")
-        if len(cells) >= 5:
-            try:
-                prestatie = cells[1].find_element(By.TAG_NAME, "a").text.strip()
-            except:
-                prestatie = cells[1].text.strip()
+        for row in rows[:30]:
+            cells = row.find_elements(By.TAG_NAME, "td")
+            if len(cells) >= 5:
+                try:
+                    prestatie = cells[1].find_element(By.TAG_NAME, "a").text.strip()
+                except:
+                    prestatie = cells[1].text.strip()
 
-            full_atleet = cells[2].text.strip().split('\n')
-            atleet = full_atleet[0]
-            club = full_atleet[1] if len(full_atleet) > 1 else ''
-            naissance = cells[3].text.strip()
-            date_lieu = cells[4].text.strip().split('\n')
+                full_atleet = cells[2].text.strip().split('\n')
+                atleet = full_atleet[0]
+                club = full_atleet[1] if len(full_atleet) > 1 else ''
+                naissance = cells[3].text.strip()
+                date_lieu = cells[4].text.strip().split('\n')
 
-            data.append({
-                "epreuve": epreuve,
-                "prestation": prestatie,
-                "athlete": atleet,
-                "club": club,
-                "annee_naissance": naissance,
-                "date": date_lieu[0],
-                "lieu": date_lieu[1] if len(date_lieu) > 1 else '',
-                "points": get_perf_points("performances_men", epreuve, prestatie)
-            })
+                data.append({
+                    "epreuve": epreuve,
+                    "prestation": prestatie,
+                    "athlete": atleet,
+                    "club": club,
+                    "annee_naissance": naissance,
+                    "date": date_lieu[0],
+                    "lieu": date_lieu[1] if len(date_lieu) > 1 else '',
+                    "points": get_perf_points("performances_men", epreuve, prestatie)
+                })
 
-    driver.quit()
-    return data
+        print(f"[DEBUG] {len(data)} résultats pour {epreuve}")
+        return data
+
+    except Exception as e:
+        print(f"[ERREUR] scrape_epreuve({epreuve}) : {e}")
+        print(traceback.format_exc())
+        return []
+    finally:
+        driver.quit()
 
 
 @app.get("/YouthMemorialDemiFond")
