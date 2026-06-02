@@ -126,7 +126,7 @@ def scrape_epreuve(epreuve: str):
 
     driver = uc.Chrome(options=options)
 
-    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2025/outdoor/scholieren-jongens/{epreuve}/"
+    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
     print("Page Chargé")
     wait = WebDriverWait(driver, 60)
