@@ -8,4 +8,4 @@ services:
     autoDeploy: true
     envVars:
       - key: PORT
-        value: 8000
+        value: "10000"   # ✅ Doit matcher le CMD (tu avais 8000 ici, mismatch !)
