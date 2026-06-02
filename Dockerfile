@@ -12,14 +12,14 @@ RUN apt-get update && apt-get install -y \
     libxtst6 lsb-release xdg-utils --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Installer Chrome version 137
+# Installer Chrome 137
 RUN mkdir -p /opt/chrome && \
     wget -q https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.70/linux64/chrome-linux64.zip && \
     unzip chrome-linux64.zip -d /opt/chrome && \
     rm chrome-linux64.zip && \
     ln -s /opt/chrome/chrome-linux64/chrome /usr/bin/google-chrome
 
-# Installer ChromeDriver version 137
+# Installer ChromeDriver 137
 RUN mkdir -p /opt/chromedriver && \
     wget -q https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.70/linux64/chromedriver-linux64.zip && \
     unzip chromedriver-linux64.zip -d /opt/chromedriver && \
@@ -27,15 +27,14 @@ RUN mkdir -p /opt/chromedriver && \
     chmod +x /usr/local/bin/chromedriver && \
     rm chromedriver-linux64.zip
 
-# Installer les dépendances Python
+# Dépendances Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code source
+# Code source
 COPY . /app
 WORKDIR /app
 
-# Port requis pour Render
 ENV PORT=10000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+# ✅ Nom du fichier corrigé : main_MVD_ARIA (pas main)
+CMD ["uvicorn", "main_MVD_ARIA:app", "--host", "0.0.0.0", "--port", "10000"]
