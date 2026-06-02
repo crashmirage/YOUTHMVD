@@ -36,5 +36,4 @@ COPY . /app
 WORKDIR /app
 
 ENV PORT=10000
-# ✅ Nom du fichier corrigé : main_MVD_ARIA (pas main)
-CMD ["uvicorn", "main_MVD_ARIA:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
