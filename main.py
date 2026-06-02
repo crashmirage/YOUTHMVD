@@ -13,8 +13,6 @@ from pydantic import BaseModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-import undetected_chromedriver as uc
 import sqlite3
 import re
 import time
@@ -112,54 +110,42 @@ def scrape_epreuve(epreuve: str):
     print(f"Démarrage Scrap pour {epreuve}")
 
     options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--user-agent=Mozilla/5.0")
+    options.binary_location = "/usr/bin/google-chrome"
 
-    service = Service("/usr/bin/chromedriver")
+    service = Service("/usr/local/bin/chromedriver")
 
     driver = webdriver.Chrome(service=service, options=options)
 
-    options = uc.ChromeOptions()
-    options.add_argument('--headless=new')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920,1080')
-    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
-    
-    options.binary_location = "/usr/bin/google-chrome"
-    print(f"[DEBUG] Chrome binary set to: {options.binary_location}")
-
-    check_chrome()
-
-    driver = uc.Chrome(options=options)
-
     url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
     driver.get(url)
-    print("Page Chargé")
+
     wait = WebDriverWait(driver, 60)
 
     try:
-        lang_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")))
+        lang_button = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")
+            )
+        )
         lang_button.click()
-        print("Language ok")
-    except Exception as e:
-        print(f"Problème Langue {e}")
+    except:
         pass
 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(3)
 
-    try:
-        table = wait.until(EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1")))
-        print("[INFO] Table de classement détectée")
-    except Exception as e:
-        print("[ERROR] Table non trouvée (headless) :", str(e))
-        driver.save_screenshot(f"headless_error_{epreuve}.png")  # Voir ce que Selenium voit
-        raise
+    table = wait.until(
+        EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1"))
+    )
 
-    #table = wait.until(EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1")))
     rows = table.find_elements(By.TAG_NAME, "tr")
+
     data = []
 
     for row in rows[:30]:
@@ -169,25 +155,24 @@ def scrape_epreuve(epreuve: str):
                 prestatie = cells[1].find_element(By.TAG_NAME, "a").text.strip()
             except:
                 prestatie = cells[1].text.strip()
+
             full_atleet = cells[2].text.strip().split('\n')
             atleet = full_atleet[0]
             club = full_atleet[1] if len(full_atleet) > 1 else ''
-            geboortejaar = cells[3].text.strip()
+            naissance = cells[3].text.strip()
             date_lieu = cells[4].text.strip().split('\n')
-            datum = date_lieu[0]
-            lieu = date_lieu[1] if len(date_lieu) > 1 else ''
-            points = get_perf_points("performances_men", epreuve, prestatie)
 
             data.append({
                 "epreuve": epreuve,
                 "prestation": prestatie,
                 "athlete": atleet,
                 "club": club,
-                "annee_naissance": geboortejaar,
-                "date": datum,
-                "lieu": lieu,
-                "points": points
+                "annee_naissance": naissance,
+                "date": date_lieu[0],
+                "lieu": date_lieu[1] if len(date_lieu) > 1 else '',
+                "points": get_perf_points("performances_men", epreuve, prestatie)
             })
+
     driver.quit()
     return data
 
