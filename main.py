@@ -9,10 +9,8 @@ from fastapi import FastAPI, Request
 from fastapi import Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from selenium import webdriver
 from pydantic import BaseModel
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
@@ -25,6 +23,9 @@ import os
 import traceback
 import shutil
 import subprocess
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 
 app = FastAPI()
@@ -109,6 +110,13 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
 
 def scrape_epreuve(epreuve: str):
     print(f"Démarrage Scrap pour {epreuve}")
+
+    options = Options()
+    options.add_argument("--disable-dev-shm-usage")
+
+    service = Service("/usr/bin/chromedriver")
+
+    driver = webdriver.Chrome(service=service, options=options)
 
     options = uc.ChromeOptions()
     options.add_argument('--headless=new')
