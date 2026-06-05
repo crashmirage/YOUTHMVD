@@ -1,38 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 11 10:22:33 2025
-
-@author: Thomas
-"""
-
-from fastapi import FastAPI, Request
-from fastapi import Query
+from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import httpx
+from bs4 import BeautifulSoup
 import sqlite3
 import re
-import time
 import json
 import os
 import traceback
-import shutil
-import subprocess
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-
 
 app = FastAPI()
-
-DB_PATH="combined.db"
+DB_PATH = "combined.db"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,154 +46,80 @@ def parse_performance(perf_str):
     except ValueError:
         return None
 
-def check_chrome():
-    result = subprocess.run(["which", "google-chrome"], capture_output=True, text=True)
-    print(f"[DEBUG] Résultat which google-chrome : {result.stdout.strip()}")
-
-    try:
-        version = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True)
-        print(f"[DEBUG] Version Google Chrome : {version.stdout.strip()}")
-    except Exception as e:
-        print(f"[DEBUG] Impossible de lire la version de Chrome : {e}")
-
-
 def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
     perf = parse_performance(perf_str)
     if perf is None:
         return None
-
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(f"SELECT `{event}`, Points FROM {table_name}")
     rows = cursor.fetchall()
     conn.close()
-
     valid_rows = []
     for p_str, pts in rows:
         p_val = parse_performance(str(p_str))
         if p_val is not None:
             valid_rows.append((p_val, pts))
     valid_rows.sort(key=lambda x: x[0])
-
     for i, (p_val, pts) in enumerate(valid_rows):
         if perf == p_val:
             return pts
         if perf < p_val:
-            if i == 0:
-                return pts
-            else:
-                return valid_rows[i][1]
+            return valid_rows[i][1]
     if valid_rows:
         return valid_rows[-1][1]
     return None
 
-
-
 def scrape_epreuve(epreuve: str):
-    print(f"Démarrage Scrap pour {epreuve}")
-
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    # Anti-détection bot
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36")
-    options.binary_location = "/usr/bin/google-chrome"
-
-    service = Service("/usr/local/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=options)
-
-    # Masquer webdriver
-    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-    })
-
-    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
-    
+    print(f"Scraping {epreuve}...")
+    url = f"https://www.athletisme.app/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "nl-BE,nl;q=0.9",
+        "Accept": "text/html,application/xhtml+xml",
+    }
     try:
-        driver.get(url)
-        wait = WebDriverWait(driver, 90)  # 90s au lieu de 60s
-
-        # Attendre que la page soit vraiment chargée
-        time.sleep(3)
-
-        # Fermer le modal langue si présent
-        try:
-            lang_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button.btn.btn-success[data-dismiss='modal']")
-                )
-            )
-            lang_button.click()
-            print(f"[DEBUG] Modal langue fermé pour {epreuve}")
-            time.sleep(2)
-        except Exception as e:
-            print(f"[DEBUG] Pas de modal langue : {e}")
-
-        # Scroll pour déclencher le lazy loading
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(3)
-        driver.execute_script("window.scrollTo(0, 0);")
-        time.sleep(1)
-
-        # Debug : voir ce qui est chargé
-        print(f"[DEBUG] URL actuelle : {driver.current_url}")
-        print(f"[DEBUG] Titre page : {driver.title}")
-
-        # Chercher le tableau
-        try:
-            table = wait.until(
-                EC.presence_of_element_located((By.ID, "ranglijstDeelnemers_1"))
-            )
-            print(f"[DEBUG] Tableau trouvé pour {epreuve}")
-        except Exception as e:
-            print(f"[DEBUG] Tableau NON trouvé. Page source (500 premiers chars) :")
-            print(driver.page_source[:500])
-            driver.quit()
-            return []
-
-        rows = table.find_elements(By.TAG_NAME, "tr")
-        data = []
-
-        for row in rows[:30]:
-            cells = row.find_elements(By.TAG_NAME, "td")
-            if len(cells) >= 5:
-                try:
-                    prestatie = cells[1].find_element(By.TAG_NAME, "a").text.strip()
-                except:
-                    prestatie = cells[1].text.strip()
-
-                full_atleet = cells[2].text.strip().split('\n')
-                atleet = full_atleet[0]
-                club = full_atleet[1] if len(full_atleet) > 1 else ''
-                naissance = cells[3].text.strip()
-                date_lieu = cells[4].text.strip().split('\n')
-
-                data.append({
-                    "epreuve": epreuve,
-                    "prestation": prestatie,
-                    "athlete": atleet,
-                    "club": club,
-                    "annee_naissance": naissance,
-                    "date": date_lieu[0],
-                    "lieu": date_lieu[1] if len(date_lieu) > 1 else '',
-                    "points": get_perf_points("performances_men", epreuve, prestatie)
-                })
-
-        print(f"[DEBUG] {len(data)} résultats pour {epreuve}")
-        return data
-
+        with httpx.Client(timeout=30, follow_redirects=True) as client:
+            r = client.get(url, headers=headers)
+        r.raise_for_status()
     except Exception as e:
-        print(f"[ERREUR] scrape_epreuve({epreuve}) : {e}")
-        print(traceback.format_exc())
+        print(f"[ERREUR] Requête échouée pour {epreuve} : {e}")
         return []
-    finally:
-        driver.quit()
+
+    soup = BeautifulSoup(r.text, "html.parser")
+    table = soup.find("table", {"id": "ranglijstDeelnemers_1"})
+
+    if not table:
+        print(f"[DEBUG] Table non trouvée pour {epreuve}")
+        return []
+
+    data = []
+    for row in table.find_all("tr")[:30]:
+        cells = row.find_all("td")
+        if len(cells) >= 5:
+            a_tag = cells[1].find("a")
+            prestatie = a_tag.text.strip() if a_tag else cells[1].text.strip()
+
+            full_atleet = cells[2].get_text("\n").strip().split("\n")
+            atleet = full_atleet[0]
+            club = full_atleet[1] if len(full_atleet) > 1 else ""
+
+            naissance = cells[3].text.strip()
+            date_lieu = cells[4].get_text("\n").strip().split("\n")
+
+            data.append({
+                "epreuve": epreuve,
+                "prestation": prestatie,
+                "athlete": atleet,
+                "club": club,
+                "annee_naissance": naissance,
+                "date": date_lieu[0],
+                "lieu": date_lieu[1] if len(date_lieu) > 1 else "",
+                "points": get_perf_points("performances_men", epreuve, prestatie)
+            })
+
+    print(f"[OK] {len(data)} résultats pour {epreuve}")
+    return data
 
 
 @app.get("/YouthMemorialDemiFond")
@@ -220,10 +129,10 @@ def get_classement_commun(update: bool = Query(False)):
             cached_data = load_json()
             if cached_data is not None:
                 return JSONResponse(content=cached_data)
-            else: return JSONResponse(
-                    content={"error": "Aucune donnée en cache. Veuillez lancer une mise à jour."},
-                    status_code=404
-                )
+            return JSONResponse(
+                content={"error": "Aucune donnée en cache. Veuillez lancer une mise à jour."},
+                status_code=404
+            )
 
         data_800m = scrape_epreuve("800m")
         data_1500m = scrape_epreuve("1500m")
@@ -240,14 +149,11 @@ def get_classement_commun(update: bool = Query(False)):
 
         classement_unique = list(seen.values())
         classement_unique.sort(key=lambda x: int(x["points"]), reverse=True)
-
-        save_json(classement_unique)  # Enregistrement dans le cache
-
+        save_json(classement_unique)
         return JSONResponse(content=classement_unique)
 
     except Exception as e:
-        tb = traceback.format_exc()
-        print(tb) 
+        print(traceback.format_exc())
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
@@ -256,11 +162,9 @@ def get_events(event_type: str, event_cat: str, gender: str):
     table_name = f"performances_{'men' if gender == 'men' else 'women'}"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
     cursor.execute(f"PRAGMA table_info({table_name})")
     columns = cursor.fetchall()
     perf_columns = [col[1] for col in columns if col[1].lower() != "points"]
-
     cursor.execute("""
         SELECT nom_db, nom_display FROM MAP
         WHERE lieu = ? AND cat = ?
@@ -268,12 +172,12 @@ def get_events(event_type: str, event_cat: str, gender: str):
     """, (event_type, event_cat))
     mapping_entries = cursor.fetchall()
     conn.close()
-
     return [
         {"nom_db": nom_db, "nom_display": nom_display}
         for nom_db, nom_display in mapping_entries
         if nom_db in perf_columns
     ]
+
 
 class FromPointsRequest(BaseModel):
     gender: str
@@ -283,45 +187,30 @@ class FromPointsRequest(BaseModel):
 @app.post("/FromPoints")
 async def from_points(data: FromPointsRequest):
     gender = data.gender.lower()
-    selected_event = data.event
-    selected_points = data.points
-
     if gender not in ("men", "women"):
         return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
-    if not selected_event or not selected_points:
-        return JSONResponse(status_code=400, content={"error": "Event and points must be provided."})
-
     table_name = f"performances_{gender}"
-
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-
-        # Récupérer le nom affiché
-        cursor.execute("SELECT nom_display FROM MAP WHERE nom_db = ?", (selected_event,))
+        cursor.execute("SELECT nom_display FROM MAP WHERE nom_db = ?", (data.event,))
         row = cursor.fetchone()
-        display_name = row[0] if row else selected_event
-
+        display_name = row[0] if row else data.event
         performance = None
-        current_points = selected_points
-
+        current_points = data.points
         while current_points <= 1400:
-            cursor.execute(f"SELECT `{selected_event}` FROM {table_name} WHERE Points = ?", (current_points,))
+            cursor.execute(f"SELECT `{data.event}` FROM {table_name} WHERE Points = ?", (current_points,))
             result = cursor.fetchone()
-            if result and result[0]:  # si on a une performance non nulle
+            if result and result[0]:
                 performance = result[0]
                 break
             current_points += 1
-
         conn.close()
-
         if performance:
             return {"performance": performance, "event_display_name": display_name}
-        else:
-            return {"performance": "No data, même en testant jusqu’à 1400", "event_display_name": display_name}
-
+        return {"performance": "No data", "event_display_name": display_name}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 class FromPerfRequest(BaseModel):
@@ -333,21 +222,12 @@ class FromPerfRequest(BaseModel):
 async def from_perf(data: FromPerfRequest):
     try:
         gender = data.gender.lower()
-        selected_event = data.event
-        selected_perf = data.perf
-
         if gender not in ("men", "women"):
             return JSONResponse(status_code=400, content={"error": "Gender must be 'men' or 'women'."})
-        if not selected_event or not selected_perf:
-            return JSONResponse(status_code=400, content={"error": "Event and performance must be provided."})
-
         table_name = f"performances_{gender}"
-        points = get_perf_points(table_name, selected_event, selected_perf)
-
+        points = get_perf_points(table_name, data.event, data.perf)
         if points is not None:
             return {"points": points}
-        else:
-            return {"points": "No data, sûrement dû à une virgule ou à un format incorrect"}
-
+        return {"points": "No data"}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Internal server error: {str(e)}"})
+        return JSONResponse(status_code=500, content={"error": str(e)})
