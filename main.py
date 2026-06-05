@@ -70,61 +70,70 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
         return valid_rows[-1][1]
     return None
 
+def perf_ms_to_str(ms):
+    """Convertit 112680 -> '1:52.68'"""
+    total_s = ms / 1000
+    minutes = int(total_s // 60)
+    secondes = total_s % 60
+    if minutes > 0:
+        return f"{minutes}:{secondes:05.2f}"
+    else:
+        return f"{secondes:.2f}"
+
 def scrape_epreuve(epreuve: str):
-    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "nl-BE,nl;q=0.9,fr;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
+    print(f"Scraping {epreuve}...")
+    
+    # Mapping nom fichier -> nom API
+    discipline_map = {
+        "800m": "800 mètres",
+        "1500m": "1500 mètres"
     }
+    discipline = discipline_map.get(epreuve, epreuve)
+    
+    url = "https://www.beathletics.be/api/results/ranking"
+    params = {
+        "season": "2025 - 2026",
+        "venue": "O",
+        "discipline": discipline,
+        "category": "SCO M"
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json",
+        "Referer": "https://www.beathletics.be/rankings",
+    }
+    
     try:
         with httpx.Client(timeout=30, follow_redirects=True) as client:
-            r = client.get(url, headers=headers)
-
-        print(f"[DEBUG] Status : {r.status_code}")
-        print(f"[DEBUG] URL finale : {r.url}")
-        print(f"[DEBUG] 2000 premiers chars : {r.text[:2000]}")
-
-        soup = BeautifulSoup(r.text, "html.parser")
-        table = soup.find("table", {"id": "ranglijstDeelnemers_1"})
-
-        if not table:
-            all_tables = soup.find_all("table")
-            print(f"[DEBUG] Tables trouvées : {[t.get('id') for t in all_tables]}")
-            return []
-
-        data = []
-        for row in table.find_all("tr")[:30]:
-            cells = row.find_all("td")
-            if len(cells) >= 5:
-                a_tag = cells[1].find("a")
-                prestatie = a_tag.text.strip() if a_tag else cells[1].text.strip()
-                full_atleet = cells[2].get_text("\n").strip().split("\n")
-                atleet = full_atleet[0]
-                club = full_atleet[1] if len(full_atleet) > 1 else ""
-                naissance = cells[3].text.strip()
-                date_lieu = cells[4].get_text("\n").strip().split("\n")
-                data.append({
-                    "epreuve": epreuve,
-                    "prestation": prestatie,
-                    "athlete": atleet,
-                    "club": club,
-                    "annee_naissance": naissance,
-                    "date": date_lieu[0],
-                    "lieu": date_lieu[1] if len(date_lieu) > 1 else "",
-                    "points": get_perf_points("performances_men", epreuve, prestatie)
-                })
-
-        print(f"[OK] {len(data)} résultats pour {epreuve}")
-        return data
-
+            r = client.get(url, params=params, headers=headers)
+        r.raise_for_status()
+        results = r.json()
     except Exception as e:
         print(f"[ERREUR] {epreuve} : {e}")
-        print(traceback.format_exc())
         return []
+
+    data = []
+    for row in results[:30]:
+        perf_str = perf_ms_to_str(row["perf"])
+        # Nom : "Longo-Murit, Mateo" -> "Mateo Longo-Murit"
+        nom_parts = row["athlete"].split(", ")
+        athlete = f"{nom_parts[1]} {nom_parts[0]}" if len(nom_parts) == 2 else row["athlete"]
+        
+        date_str = row.get("date", "")[:10]  # "2026-05-01T22:00:00.000Z" -> "2026-05-01"
+
+        data.append({
+            "epreuve": epreuve,
+            "prestation": perf_str,
+            "athlete": athlete,
+            "club": row.get("club", ""),
+            "annee_naissance": "",  # pas dans l'API
+            "date": date_str,
+            "lieu": row.get("place", ""),
+            "points": get_perf_points("performances_men", epreuve, perf_str)
+        })
+
+    print(f"[OK] {len(data)} résultats pour {epreuve}")
+    return data
 
 @app.get("/YouthMemorialDemiFond")
 def get_classement_commun(update: bool = Query(False)):
