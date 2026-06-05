@@ -71,55 +71,32 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
     return None
 
 def scrape_epreuve(epreuve: str):
-    print(f"Scraping {epreuve}...")
     url = f"https://www.athletisme.app/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept-Language": "nl-BE,nl;q=0.9",
-        "Accept": "text/html,application/xhtml+xml",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "nl-BE,nl;q=0.9,fr;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
     try:
         with httpx.Client(timeout=30, follow_redirects=True) as client:
             r = client.get(url, headers=headers)
-        r.raise_for_status()
-    except Exception as e:
-        print(f"[ERREUR] Requête échouée pour {epreuve} : {e}")
-        return []
+        
+        # DEBUG — à retirer ensuite
+        print(f"[DEBUG] Status : {r.status_code}")
+        print(f"[DEBUG] URL finale : {r.url}")
+        print(f"[DEBUG] 2000 premiers chars : {r.text[:2000]}")
 
-    soup = BeautifulSoup(r.text, "html.parser")
-    table = soup.find("table", {"id": "ranglijstDeelnemers_1"})
+        soup = BeautifulSoup(r.text, "html.parser")
+        table = soup.find("table", {"id": "ranglijstDeelnemers_1"})
 
-    if not table:
-        print(f"[DEBUG] Table non trouvée pour {epreuve}")
-        return []
-
-    data = []
-    for row in table.find_all("tr")[:30]:
-        cells = row.find_all("td")
-        if len(cells) >= 5:
-            a_tag = cells[1].find("a")
-            prestatie = a_tag.text.strip() if a_tag else cells[1].text.strip()
-
-            full_atleet = cells[2].get_text("\n").strip().split("\n")
-            atleet = full_atleet[0]
-            club = full_atleet[1] if len(full_atleet) > 1 else ""
-
-            naissance = cells[3].text.strip()
-            date_lieu = cells[4].get_text("\n").strip().split("\n")
-
-            data.append({
-                "epreuve": epreuve,
-                "prestation": prestatie,
-                "athlete": atleet,
-                "club": club,
-                "annee_naissance": naissance,
-                "date": date_lieu[0],
-                "lieu": date_lieu[1] if len(date_lieu) > 1 else "",
-                "points": get_perf_points("performances_men", epreuve, prestatie)
-            })
-
-    print(f"[OK] {len(data)} résultats pour {epreuve}")
-    return data
+        if not table:
+            # Chercher d'autres tables pour voir ce qui est là
+            all_tables = soup.find_all("table")
+            print(f"[DEBUG] Tables trouvées : {[t.get('id') for t in all_tables]}")
+            return []
 
 
 @app.get("/YouthMemorialDemiFond")
