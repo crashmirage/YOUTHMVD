@@ -112,26 +112,27 @@ def scrape_epreuve(epreuve: str):
         print(f"[ERREUR] {epreuve} : {e}")
         return []
 
+    results = r.json()
+    ranking = results.get("ranking", [])
+    
     data = []
-    for row in results[:30]:
+    for row in ranking[:30]:
         perf_str = perf_ms_to_str(row["perf"])
-        # Nom : "Longo-Murit, Mateo" -> "Mateo Longo-Murit"
         nom_parts = row["athlete"].split(", ")
         athlete = f"{nom_parts[1]} {nom_parts[0]}" if len(nom_parts) == 2 else row["athlete"]
-        
-        date_str = row.get("date", "")[:10]  # "2026-05-01T22:00:00.000Z" -> "2026-05-01"
-
+        date_str = row.get("date", "")[:10]
+    
         data.append({
             "epreuve": epreuve,
             "prestation": perf_str,
             "athlete": athlete,
             "club": row.get("club", ""),
-            "annee_naissance": "",  # pas dans l'API
+            "annee_naissance": "",
             "date": date_str,
             "lieu": row.get("place", ""),
             "points": get_perf_points("performances_men", epreuve, perf_str)
         })
-
+        
     print(f"[OK] {len(data)} résultats pour {epreuve}")
     return data
 
