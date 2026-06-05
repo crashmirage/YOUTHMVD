@@ -83,8 +83,7 @@ def scrape_epreuve(epreuve: str):
     try:
         with httpx.Client(timeout=30, follow_redirects=True) as client:
             r = client.get(url, headers=headers)
-        
-        # DEBUG — à retirer ensuite
+
         print(f"[DEBUG] Status : {r.status_code}")
         print(f"[DEBUG] URL finale : {r.url}")
         print(f"[DEBUG] 2000 premiers chars : {r.text[:2000]}")
@@ -93,11 +92,39 @@ def scrape_epreuve(epreuve: str):
         table = soup.find("table", {"id": "ranglijstDeelnemers_1"})
 
         if not table:
-            # Chercher d'autres tables pour voir ce qui est là
             all_tables = soup.find_all("table")
             print(f"[DEBUG] Tables trouvées : {[t.get('id') for t in all_tables]}")
             return []
 
+        data = []
+        for row in table.find_all("tr")[:30]:
+            cells = row.find_all("td")
+            if len(cells) >= 5:
+                a_tag = cells[1].find("a")
+                prestatie = a_tag.text.strip() if a_tag else cells[1].text.strip()
+                full_atleet = cells[2].get_text("\n").strip().split("\n")
+                atleet = full_atleet[0]
+                club = full_atleet[1] if len(full_atleet) > 1 else ""
+                naissance = cells[3].text.strip()
+                date_lieu = cells[4].get_text("\n").strip().split("\n")
+                data.append({
+                    "epreuve": epreuve,
+                    "prestation": prestatie,
+                    "athlete": atleet,
+                    "club": club,
+                    "annee_naissance": naissance,
+                    "date": date_lieu[0],
+                    "lieu": date_lieu[1] if len(date_lieu) > 1 else "",
+                    "points": get_perf_points("performances_men", epreuve, prestatie)
+                })
+
+        print(f"[OK] {len(data)} résultats pour {epreuve}")
+        return data
+
+    except Exception as e:
+        print(f"[ERREUR] {epreuve} : {e}")
+        print(traceback.format_exc())
+        return []
 
 @app.get("/YouthMemorialDemiFond")
 def get_classement_commun(update: bool = Query(False)):
