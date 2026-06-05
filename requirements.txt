@@ -1,5 +1,5 @@
 fastapi
 uvicorn[standard]
-selenium
-webdriver-manager
-undetected-chromedriver==3.5.5
+httpx
+beautifulsoup4
+pydantic
