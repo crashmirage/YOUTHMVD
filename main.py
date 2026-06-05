@@ -71,7 +71,7 @@ def get_perf_points(table_name, event, perf_str, db_path="combined.db"):
     return None
 
 def scrape_epreuve(epreuve: str):
-    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/""
+    url = f"https://www.atletiek.nu/ranglijst/belgische-ranglijst/2026/outdoor/scholieren-jongens/{epreuve}/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
